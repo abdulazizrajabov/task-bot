@@ -108,10 +108,10 @@ function addTaskToDB(bot, chatId, title, description, priority, assignedTo, call
             // Уведомляем исполнителя
             const icon = getPriorityIcon(priority);
             const text =
-                `Вам назначена новая задача!\n` +
-                `Название задачи: ${title}\n` +
-                `Описание задачи: ${description}\n` +
-                `Приоритет: ${icon} ${priority}`;
+                `⚠️ Sizga yangi vazifa biriktirildi!\n` +
+                `👉 Vazifaning nomi: ${title}\n` +
+                `👉 Tavsif: ${description}\n` +
+                `👉 Ustuvorlik: ${icon} ${priority}`;
 
             dbModule.getUserById(assignedTo, (errUser, user) => {
                 if (!errUser && user) {
@@ -142,7 +142,7 @@ function unarchiveTask(bot, chatId, taskId) {
             if (task.assigned_to) {
                 bot.sendMessage(
                     task.assigned_to,
-                    `Задача #${taskId} возвращена на доработку.`
+                    `💩 №${taskId} topshirigʻi qayta koʻrib chiqish uchun qaytarildi. Ushbu topshiriqni "Mening topshiriqlarim" bo'limidan topasiz`
                 );
             }
         });
