@@ -16,33 +16,62 @@ const userStates = {};
 // Инициализация бота
 const bot = new TelegramBot(config.BOT_TOKEN, { polling: true });
 
-// ----------- /start -----------
+
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
-    const text = msg.text;
 
-    // 1. Игнорируем сообщение /start, чтобы оно не дублировалось
-    if (text === '/start') {
-        return;
-    }
-
-    dbModule.getUserById(userId, (err, user) => {
+    // 1) Сначала проверяем, пустая ли таблица users
+    dbModule.getAllUsers((err, users) => {
         if (err) {
             bot.sendMessage(chatId, 'Ошибка при чтении из БД.');
             return;
         }
-        if (!user) {
-            bot.sendMessage(chatId, 'Вы не зарегистрированы в системе. Обратитесь к администратору.');
-            return;
+
+        // Если таблица пустая (нет ни одного пользователя)
+        if (users.length === 0) {
+            // И если userId есть в списке config.ADMINS, добавляем его в базу как админа
+            if (config.ADMINS.includes(userId)) {
+                dbModule.addUser(userId, msg.from.first_name || 'Admin', 'admin', (errAdd) => {
+                    if (errAdd) {
+                        bot.sendMessage(chatId, 'Ошибка при добавлении первого админа.');
+                    } else {
+                        bot.sendMessage(chatId, 'Вы успешно добавлены как первый администратор!');
+                        // После этого продолжаем обычную логику
+                        showMenuOrSomething(chatId, userId);
+                    }
+                });
+            } else {
+                // Если база пуста, а пользователь не в списке config.ADMINS —
+                // можно либо отказать, либо просто сказать: «У нас нет администраторов».
+                bot.sendMessage(chatId, 'База пуста, но вы не являетесь администратором. Обратитесь к тому, кто прописан в конфиге.');
+            }
+        } else {
+            // Если база не пуста — продолжаем обычную логику
+            showMenuOrSomething(chatId, userId);
         }
-        if (admin.isAdmin(userId)) {
+    });
+});
+
+// Далее обычная логика
+function showMenuOrSomething(chatId, userId) {
+    // Получаем пользователя из БД (он уже там должен быть, если не первый старт)
+    dbModule.getUserById(userId, (err, user) => {
+        if (err || !user) {
+            // Пользователя нет в БД → выводим сообщение
+            // (например, «Вы не зарегистрированы в системе» или «Обратитесь к администратору»)
+            return bot.sendMessage(chatId, 'Вы не зарегистрированы в системе. Обратитесь к администратору.');
+        }
+
+        // Если нашли пользователя
+        if (user.role === 'admin') {
             admin.showAdminMainMenu(bot, chatId);
         } else {
             programmer.showProgrammerMainMenu(bot, chatId, userStates, userId);
         }
     });
-});
+}
+
 
 // ----------- Обработчик всех callback_query -----------
 bot.on('callback_query', (query) => {
