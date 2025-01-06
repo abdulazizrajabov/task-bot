@@ -28,11 +28,11 @@ function showProgrammerMainMenu(bot, chatId, userStates, userId) {
     const options = {
         reply_markup: {
             inline_keyboard: [
-                [{ text: 'Мои задачи', callback_data: 'programmer_view_tasks' }],
+                [{ text: 'Mening vazifalarim', callback_data: 'programmer_view_tasks' }],
             ],
         },
     };
-    sendMessageAndRemember(bot, chatId, 'Главное меню (Программист):', options, userStates, userId);
+    sendMessageAndRemember(bot, chatId, 'Bosh menyu (PROGRAMMIST):', options, userStates, userId);
 }
 
 // Меню выбора приоритета (шаг 1)
@@ -42,23 +42,23 @@ function showProgrammerTaskFilters(bot, chatId, userStates, userId) {
     const options = {
         reply_markup: {
             inline_keyboard: [
-                [{ text: 'Все мои задачи', callback_data: 'programmer_filter_ALL' }],
+                [{ text: 'Barcha vazifalarim', callback_data: 'programmer_filter_ALL' }],
                 [
-                    { text: '🔴 Красный',   callback_data: 'programmer_filter_Красный' },
-                    { text: '🟠 Оранжевый', callback_data: 'programmer_filter_Оранжевый' },
+                    { text: '🔴 Qizil',   callback_data: 'programmer_filter_Красный' },
+                    { text: '🟠 Orange', callback_data: 'programmer_filter_Оранжевый' },
                 ],
                 [
-                    { text: '🟡 Желтый', callback_data: 'programmer_filter_Желтый' },
-                    { text: '🟢 Зеленый', callback_data: 'programmer_filter_Зеленый' },
-                    { text: '🔵 Синий',   callback_data: 'programmer_filter_Синий' },
+                    { text: '🟡 Sariq', callback_data: 'programmer_filter_Желтый' },
+                    { text: '🟢 Yashil', callback_data: 'programmer_filter_Зеленый' },
+                    { text: '🔵 Ko\'k',   callback_data: 'programmer_filter_Синий' },
                 ],
                 [
-                    { text: 'Назад', callback_data: 'programmer_back_to_main' },
+                    { text: 'Orqaga', callback_data: 'programmer_back_to_main' },
                 ],
             ],
         },
     };
-    sendMessageAndRemember(bot, chatId, 'Выберите приоритет (фильтрация ваших задач):', options, userStates, userId);
+    sendMessageAndRemember(bot, chatId, 'Ustuvorlikni tanlang (vazifalaringizni filtrlash):', options, userStates, userId);
 }
 
 // Список задач (шаг 2)
@@ -70,42 +70,41 @@ function filterTasksForProgrammer(bot, chatId, userStates, userId, priority) {
 
     dbModule.getTasks(filters, (err, tasks) => {
         if (err) {
-            sendMessageAndRemember(bot, chatId, 'Ошибка при получении задач.', {}, userStates, userId);
+            sendMessageAndRemember(bot, chatId, 'Vazifalarni qabul qilishda xatolik yuz berdi.', {}, userStates, userId);
             return;
         }
         if (!tasks || tasks.length === 0) {
-            sendMessageAndRemember(bot, chatId, 'Нет задач по выбранному фильтру.', {
+            sendMessageAndRemember(bot, chatId, 'Tanlangan filtr bo\'yicha hech qanday vazifa yo\'q.', {
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: 'Назад', callback_data: 'programmer_back_to_filter' }],
+                        [{ text: 'Orqaga', callback_data: 'programmer_back_to_filter' }],
                     ],
                 },
             }, userStates, userId);
             return;
         }
 
-        let msgText = 'Ваши задачи:\n\n';
+        let msgText = 'Sizning vazifalaringiz:\n\n';
         const inlineKeyboard = [];
 
         tasks.forEach((task) => {
             const icon = getPriorityIcon(task.priority);
-            msgText += `#${task.id}\n`;
-            msgText += `Название: ${task.title}\n`;
-            msgText += `Описание: ${task.description}\n`;
-            msgText += `Приоритет: ${icon} ${task.priority}\n`;
-            msgText += `Статус: ${task.status}\n`;
+            msgText += `Ustuvorlik: ${icon} ${task.priority}\n`;
+            msgText += `Nomi: #${task.id} ${task.title}\n`;
+            msgText += `Tavsif: ${task.description}\n`;
+            msgText += `Status: ${task.status}\n`;
             msgText += `\n`;
 
             // Кнопка закрыть, если «Не выполнено»
             if (task.status === 'Не выполнено') {
                 inlineKeyboard.push([
-                    { text: `Закрыть #${task.id}`, callback_data: `programmer_close_${task.id}` },
+                    { text: `✅ Tugallandi: #${task.id}`, callback_data: `programmer_close_${task.id}` },
                 ]);
             }
         });
 
         // Добавим кнопку назад
-        inlineKeyboard.push([{ text: 'Назад', callback_data: 'programmer_back_to_filter' }]);
+        inlineKeyboard.push([{ text: 'Orqaga', callback_data: 'programmer_back_to_filter' }]);
 
         sendMessageAndRemember(
             bot,
@@ -122,11 +121,11 @@ function filterTasksForProgrammer(bot, chatId, userStates, userId, priority) {
 function closeTask(bot, chatId, userStates, userId, taskId) {
     dbModule.updateTask(taskId, { status: 'Выполнено', archived: 1 }, (err) => {
         if (err) {
-            sendMessageAndRemember(bot, chatId, 'Ошибка при закрытии задачи.', {}, userStates, userId);
+            sendMessageAndRemember(bot, chatId, 'Vazifani yopishda xatolik yuz berdi.', {}, userStates, userId);
             return;
         }
         // Сообщаем программисту
-        sendMessageAndRemember(bot, chatId, `Задача #${taskId} закрыта и отправлена в архив.`, {}, userStates, userId);
+        sendMessageAndRemember(bot, chatId, `№${taskId} vazifa yopildi va arxivlandi ✅`, {}, userStates, userId);
 
         // Отправляем сообщение в канал архива
         dbModule.getTaskById(taskId, (errTask, task) => {
@@ -135,19 +134,19 @@ function closeTask(bot, chatId, userStates, userId, taskId) {
                 const assignedName = (user && user.name) ? user.name : '—';
                 const icon = getPriorityIcon(task.priority);
                 const archiveText =
-                    `Задача #${task.id} завершена:\n` +
-                    `Название: ${task.title}\n` +
-                    `Описание: ${task.description}\n` +
-                    `Приоритет: ${icon} ${task.priority}\n` +
-                    `Исполнитель: ${assignedName}\n` +
-                    `Время закрытия: ${new Date().toLocaleString()}\n`;
+                    `№${task.id} vazifa bajarildi:\n` +
+                    `Nomi: ${task.title}\n` +
+                    `Tavsif: ${task.description}\n` +
+                    `Ustuvorlik: ${icon} ${task.priority}\n` +
+                    `Ijrochi: ${assignedName}\n` +
+                    `Yopilish vaqti: ${new Date().toLocaleString()}\n`;
 
                 // Кнопка «Отменить действие»
                 const opts = {
                     reply_markup: {
                         inline_keyboard: [
                             [
-                                { text: 'Отменить действие', callback_data: `unarchive_${task.id}` },
+                                { text: 'Amalni bekor qilish', callback_data: `unarchive_${task.id}` },
                             ],
                         ],
                     },
